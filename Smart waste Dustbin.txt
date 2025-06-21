@@ -1,0 +1,55 @@
+#include <Servo.h>
+
+#define trigPin D5
+#define echoPin D6
+#define moisturePin A0
+#define servoPin D4
+
+Servo myservo;
+
+long duration;
+int distance;
+int moistureVal;
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+  myservo.attach(servoPin);
+  myservo.write(90); // Neutral position
+}
+
+void loop() {
+  // Measure distance
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+
+  duration = pulseIn(echoPin, HIGH);
+  distance = duration * 0.034 / 2;
+
+  Serial.print("Distance: ");
+  Serial.print(distance);
+  Serial.println(" cm");
+
+  if (distance < 15) {
+    // Read soil moisture
+    moistureVal = analogRead(moisturePin);
+    Serial.print("Moisture: ");
+    Serial.println(moistureVal);
+
+    if (moistureVal < 500) {
+      Serial.println("Wet waste detected!");
+      myservo.write(0); // Move to wet bin
+    } else {
+      Serial.println("Dry waste detected!");
+      myservo.write(180); // Move to dry bin
+    }
+    delay(3000); // Delay before resetting
+    myservo.write(90); // Reset position
+  }
+
+  delay(500);
+}
